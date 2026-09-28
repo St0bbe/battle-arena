@@ -20,7 +20,23 @@ export class BattleArena{
   for(let i=0;i<this.game.length;i++)for(let j=i+1;j<this.game.length;j++)this.resolveBallCollision(this.game[i],this.game[j]);
   for(const owner of this.game){if(!owner.alive)continue;for(const attacker of this.game){if(!attacker.alive||attacker===owner)continue;for(let i=owner.lines.length-1;i>=0;i--){const l=owner.lines[i];if(this.segmentHitsCircle(owner.x,owner.y,l.x,l.y,attacker.x,attacker.y,attacker.r*.78)){owner.lines.splice(i,1);if(owner.lines.length===0){owner.alive=false;break;}}}if(!owner.alive)break;}}
  }
- resolveBallCollision(a,b){if(!a.alive||!b.alive)return;const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1,min=a.r+b.r;if(d>=min)return;const nx=dx/d,ny=dy/d,over=min-d;a.x-=nx*over/2;a.y-=ny*over/2;b.x+=nx*over/2;b.y+=ny*over/2;const rel=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;if(rel<0){a.vx+=rel*nx;a.vy+=rel*ny;b.vx-=rel*nx;b.vy-=rel*ny;}}
+ resolveBallCollision(a,b){
+  // Ball-to-ball contact is purely physical: no damage, no line loss.
+  if(!a.alive||!b.alive)return;
+  const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||.001,min=a.r+b.r;
+  if(d>=min)return;
+  const nx=dx/d,ny=dy/d,over=min-d;
+  // Separate immediately so mobile frame drops cannot leave balls stuck together.
+  a.x-=nx*(over/2+.5);a.y-=ny*(over/2+.5);
+  b.x+=nx*(over/2+.5);b.y+=ny*(over/2+.5);
+  // Equal-mass elastic collision: exchange only the velocity component along impact normal.
+  const avn=a.vx*nx+a.vy*ny,bvn=b.vx*nx+b.vy*ny;
+  const closing=avn-bvn;
+  if(closing>0){
+   a.vx+=(bvn-avn)*nx;a.vy+=(bvn-avn)*ny;
+   b.vx+=(avn-bvn)*nx;b.vy+=(avn-bvn)*ny;
+  }
+ }
  segmentHitsCircle(x1,y1,x2,y2,cx,cy,r){const vx=x2-x1,vy=y2-y1,wx=cx-x1,wy=cy-y1,len=vx*vx+vy*vy;if(!len)return false;const t=Math.max(.12,Math.min(1,(wx*vx+wy*vy)/len)),px=x1+t*vx,py=y1+t*vy;return Math.hypot(cx-px,cy-py)<=r;}
  draw(){const size=parseFloat(this.canvas.style.width)||Math.min(this.wrap.clientWidth,720);if(!size)return;const ctx=this.ctx,c=size/2,R=size*.43;ctx.clearRect(0,0,size,size);const g=ctx.createRadialGradient(c,c,R*.1,c,c,R);g.addColorStop(0,"#171c2b");g.addColorStop(1,"#080b12");ctx.beginPath();ctx.arc(c,c,R,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();ctx.strokeStyle="#39445c";ctx.lineWidth=4;ctx.stroke();ctx.save();ctx.beginPath();ctx.arc(c,c,R-2,0,Math.PI*2);ctx.clip();
   const list=this.game||this.participants.map((p,i)=>{const a=i/Math.max(1,this.participants.length)*Math.PI*2,r=Math.min(this.settings.ballSize||25,30),x=c+Math.cos(a)*R*.55,y=c+Math.sin(a)*R*.55;return {...p,x,y,r,alive:true,color:COLORS[i%COLORS.length],lines:[{x:c+Math.cos(a)*R,y:c+Math.sin(a)*R}],img:null};});
