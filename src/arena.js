@@ -13,7 +13,27 @@ export class BattleArena{
  }
  stop(clear=true){cancelAnimationFrame(this.raf);this.last=0;if(clear)this.game=null;}
  reset(){this.stop();this.onState?.("Aguardando batalha");this.onAlive?.(this.participants.length,false);this.draw();}
- addLine(b,seed=null){const max=this.settings.maxLines||8;if(b.lines.length>=max)return;const size=parseFloat(this.canvas.style.width)||500,c=size/2,R=size*.475;let angle=seed===null?Math.atan2(b.y-c,b.x-c)+(Math.random()-.5)*1.8:(seed/(this.settings.startLines||3))*Math.PI*2;let px=c+Math.cos(angle)*R,py=c+Math.sin(angle)*R;b.lines.push({x:px,y:py,flash:12});}
+ addLine(b,seed=null){
+  const max=this.settings.maxLines||60;
+  if(b.lines.length>=max)return;
+  const size=parseFloat(this.canvas.style.width)||500,c=size/2,R=size*.475;
+  const base=Math.atan2(b.y-c,b.x-c);
+  let angle;
+  if(seed!==null){
+   // Initial lines form a compact fan on the same wall-side where the ball spawns.
+   const total=Math.max(1,this.settings.startLines||12);
+   const fan=.42;
+   const offset=total===1?0:(seed/(total-1)-.5)*fan;
+   angle=base+offset;
+  }else{
+   // A wall hit adds a new line close to the actual contact side.
+   const spread=.32;
+   const slot=(b.lines.length%9)-4;
+   angle=base+slot*(spread/8);
+  }
+  const px=c+Math.cos(angle)*R,py=c+Math.sin(angle)*R;
+  b.lines.push({x:px,y:py,flash:12});
+ }
  loop(t){if(!this.game)return;if(!this.last)this.last=t;const dt=Math.min(2,(t-this.last)/16.67);this.last=t;this.update(dt);this.draw();const alive=this.game.filter(b=>b.alive);this.onAlive?.(alive.length,true);if(alive.length>1)this.raf=requestAnimationFrame(n=>this.loop(n));else if(alive.length===1){this.onState?.("Batalha finalizada");this.onWinner?.(alive[0]);}}
  update(dt){const size=parseFloat(this.canvas.style.width),c=size/2,R=size*.475;
   for(const b of this.game){if(!b.alive)continue;b.wallCooldown=Math.max(0,b.wallCooldown-dt);b.x+=b.vx*dt;b.y+=b.vy*dt;for(const l of b.lines)l.flash=Math.max(0,l.flash-dt);const dx=b.x-c,dy=b.y-c,d=Math.hypot(dx,dy)||1;if(d+b.r>=R){const nx=dx/d,ny=dy/d,dot=b.vx*nx+b.vy*ny;if(dot>0){b.vx-=2*dot*nx;b.vy-=2*dot*ny;b.x=c+nx*(R-b.r-2);b.y=c+ny*(R-b.r-2);if(b.wallCooldown<=0){this.addLine(b);b.wallCooldown=10;}}}}
