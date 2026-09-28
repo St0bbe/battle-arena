@@ -8,7 +8,7 @@ export class BattleArena{
  setPreview(participants,settings){this.participants=participants;this.settings=settings;this.draw();}
  resize(){const w=Math.min(this.wrap.clientWidth-16,720);if(w<50)return;const dpr=Math.min(window.devicePixelRatio||1,2);this.canvas.width=w*dpr;this.canvas.height=w*dpr;this.canvas.style.width=w+"px";this.canvas.style.height=w+"px";this.ctx.setTransform(dpr,0,0,dpr,0,0);this.draw();}
  start(participants,settings){this.stop(false);this.participants=participants;this.settings={...settings};this.last=0;const size=parseFloat(this.canvas.style.width)||500,c=size/2,R=size*.475;
-  this.game=participants.map((p,i)=>{const a=i/participants.length*Math.PI*2,rad=Math.min(settings.ballSize,Math.max(13,R*.48/Math.sqrt(participants.length))),va=a+Math.PI*.72+(Math.random()-.5)*.7;const b={...p,x:c+Math.cos(a)*R*.45,y:c+Math.sin(a)*R*.45,vx:Math.cos(va)*settings.speed,vy:Math.sin(va)*settings.speed,r:rad,alive:true,lines:[],wallCooldown:0,img:null,color:COLORS[i%COLORS.length]};if(b.image){b.img=new Image();b.img.src=b.image}for(let n=0;n<(settings.startLines||3);n++)this.addLine(b,n);return b;});
+  this.game=participants.map((p,i)=>{const a=i/participants.length*Math.PI*2,rad=Math.min(settings.ballSize,Math.max(13,R*.48/Math.sqrt(participants.length))),va=a+Math.PI*.72+(Math.random()-.5)*.7;const b={...p,x:c+Math.cos(a)*R*.45,y:c+Math.sin(a)*R*.45,vx:Math.cos(va)*settings.speed,vy:Math.sin(va)*settings.speed,r:rad,alive:true,lines:[],wallCooldown:0,img:null,color:COLORS[i%COLORS.length],spawnAngle:a};if(b.image){b.img=new Image();b.img.src=b.image}for(let n=0;n<(settings.startLines||3);n++)this.addLine(b,n);return b;});
   this.startedAt=performance.now();this.onState?.("Batalha em andamento");this.onAlive?.(this.game.length,true);this.draw();this.raf=requestAnimationFrame(t=>this.loop(t));
  }
  stop(clear=true){cancelAnimationFrame(this.raf);this.last=0;if(clear)this.game=null;}
@@ -17,15 +17,17 @@ export class BattleArena{
   const max=this.settings.maxLines||60;
   if(b.lines.length>=max)return;
   const size=parseFloat(this.canvas.style.width)||500,c=size/2,R=size*.475;
-  const base=Math.atan2(b.y-c,b.x-c);
+  const currentAngle=Math.atan2(b.y-c,b.x-c);
   let angle;
   if(seed!==null){
-   // Initial lines form a compact fan on the same wall-side where the ball spawns.
+   // Initial lines are permanently anchored to the participant's spawn side.
+   const base=b.spawnAngle ?? currentAngle;
    const total=Math.max(1,this.settings.startLines||12);
-   const fan=.42;
+   const fan=.12;
    const offset=total===1?0:(seed/(total-1)-.5)*fan;
    angle=base+offset;
   }else{
+   const base=currentAngle;
    // A wall hit adds a new line close to the actual contact side.
    const spread=.32;
    const slot=(b.lines.length%9)-4;
