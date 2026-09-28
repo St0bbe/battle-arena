@@ -42,8 +42,10 @@ document.querySelector("#add").addEventListener("click",()=>{participants.push({
  input.addEventListener("input",()=>{settings[key]=Number(input.value);output.textContent=input.value;refreshPreview();});
 });
 
-document.querySelector("#start").addEventListener("click",()=>{winner.classList.add("hidden");arena.start(participants,settings);});
-document.querySelector("#reset").addEventListener("click",()=>{winner.classList.add("hidden");arena.reset();});
+const startButton=document.querySelector("#start");
+function startBattle(event){event?.preventDefault();winner.classList.add("hidden");startButton.textContent="⚔️ BATALHA EM ANDAMENTO";arena.start(participants.map(p=>({...p})),{...settings});document.querySelector(".game").scrollIntoView({behavior:"smooth",block:"start"});}
+startButton.addEventListener("click",startBattle);
+document.querySelector("#reset").addEventListener("click",()=>{winner.classList.add("hidden");startButton.textContent="▶ INICIAR BATALHA";arena.reset();});
 
 renderParticipants();
 refreshPreview();
