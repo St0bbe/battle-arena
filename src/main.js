@@ -36,7 +36,7 @@ function renderParticipants(){
 
 document.querySelector("#add").addEventListener("click",()=>{participants.push({id:nextId++,name:"Participante "+(participants.length+1),emoji:"⚔️",image:""});renderParticipants();refreshPreview();});
 
-["speed","hp","damage","ballSize"].forEach(key=>{
+["speed","startLines","maxLines","ballSize"].forEach(key=>{
  const input=document.querySelector("#"+key),output=document.querySelector("#"+key+"Out");
  input.value=settings[key];output.textContent=settings[key];
  input.addEventListener("input",()=>{settings[key]=Number(input.value);output.textContent=input.value;refreshPreview();});
