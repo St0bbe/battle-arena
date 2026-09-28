@@ -1,5 +1,5 @@
 export const COLORS=["#2dd4bf","#60a5fa","#f472b6","#f59e0b","#a78bfa","#34d399","#fb7185","#22d3ee"];
-export const DEFAULT_SETTINGS={speed:3.2,damage:18,hp:100,ballSize:25};
+export const DEFAULT_SETTINGS={speed:3.2,startLines:3,maxLines:8,ballSize:25};
 export const DEFAULT_PARTICIPANTS=[
 {id:1,name:"Brasil",emoji:"🇧🇷",image:""},
 {id:2,name:"Argentina",emoji:"🇦🇷",image:""},
