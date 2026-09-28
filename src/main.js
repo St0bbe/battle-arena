@@ -24,9 +24,9 @@ function renderParticipants(){
  const box=document.querySelector("#participants");box.innerHTML="";
  participants.forEach(p=>{
   const row=document.createElement("div");row.className="person";
-  row.innerHTML=`<div class="avatar">${p.image?`<img src="${p.image}" alt="">`:`<span>${p.emoji}</span>`}</div><div class="fields"><input class="name" value="${escapeHtml(p.name)}" aria-label="Nome do participante"><div class="mini"><label class="upload">📷 Logo<input type="file" accept="image/*"></label><input class="emoji" value="${p.emoji}" maxlength="8" aria-label="Emoji"></div></div><button class="remove" title="Remover" aria-label="Remover participante">×</button>`;
+  row.innerHTML=`<div class="avatar">${p.image?`<img src="${p.image}" alt="">`:`<span>${p.emoji}</span>`}</div><div class="fields"><input class="name" value="${escapeHtml(p.name)}" aria-label="Nome do participante"><div class="mini"><label class="upload">📷 Logo<input type="file" accept="image/*"></label><input class="emoji" value="${p.image?"":p.emoji}" placeholder="${p.image?"Logo ativa":"Emoji"}" maxlength="8" aria-label="Emoji" ${p.image?"disabled":""}></div></div><button class="remove" title="Remover" aria-label="Remover participante">×</button>`;
   row.querySelector(".name").addEventListener("input",e=>{p.name=e.target.value||"Sem nome";});
-  row.querySelector(".emoji").addEventListener("change",e=>{p.emoji=e.target.value||"⚪";renderParticipants();refreshPreview();});
+  row.querySelector(".emoji").addEventListener("change",e=>{if(p.image)return;p.emoji=e.target.value||"⚪";renderParticipants();refreshPreview();});
   row.querySelector(".remove").addEventListener("click",()=>{if(participants.length<=2)return;participants=participants.filter(x=>x.id!==p.id);renderParticipants();refreshPreview();});
   row.querySelector('input[type="file"]').addEventListener("change",async e=>{const file=e.target.files?.[0];if(!file)return;try{p.image=await readImageFile(file);renderParticipants();refreshPreview();}catch{alert("Não foi possível carregar essa imagem.");}});
   box.append(row);
